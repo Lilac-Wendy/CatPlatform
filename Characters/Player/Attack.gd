@@ -3,7 +3,7 @@ extends LimboState
 @export var animation_player: AnimationPlayer
 @export var base_lock_duration := 1.5
 
-@export var combo_sequence: Array[String] = ["THRUST", "SLASH", "SPIN"]
+@export var combo_sequence: Array[String] = ["SMASH", "THRUST", "SPIN"]
 
 var current_combo_index := 0
 var queued_next_attack := false
@@ -83,7 +83,7 @@ func _on_attack_finished() -> void:
 	if queued_next_attack and current_combo_index < combo_sequence.size() - 1:
 
 		current_combo_index += 1
-		print("[Attack] chaining to combo #%d" % (current_combo_index + 1))
+		print("[Attack] Encadeando para combo #%d" % (current_combo_index + 1))
 		_enter({})  
 		return
 	else:

@@ -810,8 +810,8 @@ floor_constant_speed = true
 platform_on_leave = 1
 platform_floor_layers = 4294967279
 script = ExtResource("1_4flbx")
-attack_speed = 4.0
-air_attack_mode = "float"
+jump_force = 5.0
+move_threshold = 0.0
 
 [node name="TailCamera" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.386, 0.9)
@@ -853,12 +853,12 @@ oversampling = false
 size = Vector2i(1512, 800)
 
 [node name="Tail" parent="AnimatedSprite3D/Viewport/SubViewport" node_paths=PackedStringArray("TailStart3D", "TailEnd3D", "MainCamera", "TargetViewport") instance=ExtResource("3_i3pqv")]
-SegmentCount = 20
+SegmentCount = 30
 TailLength = 230.0
 ConstraintStrength = 1.1
 VerletGravity = 25.0
 TailFollowSpeed = 60.0
-CurveSmoothness = 0.6
+CurveSmoothness = 1.0
 TailStart3D = NodePath("../../../../TailContainer/TailStart3D")
 TailEnd3D = NodePath("../../../../TailContainer/TailEnd3D")
 MainCamera = NodePath("../../../../TailCamera")
@@ -899,7 +899,7 @@ debug_color = Color(0.59434074, 0.4404661, 0.838369, 0.41960785)
 [node name="TailContainer" type="Node3D" parent="."]
 
 [node name="TailEnd3D" type="AnimatableBody3D" parent="TailContainer"]
-transform = Transform3D(0.05, 0, 0, 0, 0.04999742, -0.00050788204, 0, 0.00050788204, 0.04999742, -0.7, 0.2, 0)
+transform = Transform3D(0.05, 0, 0, 0, 0.04999742, -0.00050788204, 0, 0.00050788204, 0.04999742, -0.31608564, 0.35785526, 0)
 collision_layer = 16
 collision_mask = 16
 sync_to_physics = false
