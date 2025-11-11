@@ -6,7 +6,7 @@ extends LimboState
 func _enter(_msg := {}) -> void:
 	var player = get_parent().get_parent()
 	if not player:
-		push_warning("Jumping: player não encontrado")
+		push_warning("Jumping: player not found")
 		_end_state()
 		return
 
@@ -20,13 +20,11 @@ func _enter(_msg := {}) -> void:
 		animation_player.seek(0, true)
 		animation_player.play(anim_name)
 
-		# 🔹 toca a cauda idle junto
 		if player.has_method("play_tail"):
 			player.play_tail("IDLE")
 	else:
-		push_warning("Jumping: animação '%s' não encontrada" % anim_name)
+		push_warning("Jumping: animation '%s' not found" % anim_name)
 		_end_state()
-
 
 func _on_finished(anim_name: String) -> void:
 	var player = get_parent().get_parent()
@@ -34,14 +32,12 @@ func _on_finished(anim_name: String) -> void:
 		_end_state()
 		return
 
-	# 🚫 se o player estiver atacando, não sai do estado Jump ainda
 	if player.current_state == player.State.ATTACK:
-		print("[Jumping] Ignorando finished — ataque em andamento.")
+		print("[Jumping] Ignoring finished — attack in progress.")
 		return
 
 	print("[Jumping] finished animation=%s" % anim_name)
 	_end_state()
-
 
 func _end_state() -> void:
 	if has_method("dispatch"):

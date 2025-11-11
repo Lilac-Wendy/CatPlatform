@@ -3,20 +3,17 @@ extends LimboState
 @export var animation_player: AnimationPlayer
 @export var base_lock_duration := 1.5
 
-# 🗡️ Sequência de animações de combo (ordem dos ataques)
 @export var combo_sequence: Array[String] = ["THRUST", "SLASH", "SPIN"]
 
-# 🔢 Estado atual do combo
 var current_combo_index := 0
 var queued_next_attack := false
 
-# 🧭 Referências
 var lock_timer: Timer
 var player: Node
 
 func _enter(msg: Dictionary = {}) -> void:
 	if not animation_player:
-		push_warning("Attack: animation_player não definido.")
+		push_warning("Attack: animation player not defined.")
 		_end_state()
 		return
 
@@ -25,11 +22,10 @@ func _enter(msg: Dictionary = {}) -> void:
 
 	player = get_parent().get_parent()
 	if not player:
-		push_warning("Attack: player não encontrado")
+		push_warning("Attack: player not found")
 		_end_state()
 		return
 
-	# ⚔️ Determina o nome da animação
 	var anim_name: String
 	if msg.has("animation"):
 		anim_name = msg["animation"]
@@ -52,7 +48,6 @@ func _enter(msg: Dictionary = {}) -> void:
 
 		player.is_transitioning = true
 
-		# ⏲️ Timer de lock
 		lock_timer = Timer.new()
 		lock_timer.wait_time = base_lock_duration / atk_speed
 		lock_timer.one_shot = true
@@ -63,24 +58,21 @@ func _enter(msg: Dictionary = {}) -> void:
 		queued_next_attack = false
 		print("[Attack] atk_speed=%.2f lock_time=%.2f" % [atk_speed, lock_timer.wait_time])
 	else:
-		push_warning("Attack: animação '%s' não encontrada" % anim_name)
+		push_warning("Attack: animation '%s' not found" % anim_name)
 		_end_state()
 
-
 func _process(_delta: float) -> void:
-	# 💥 Detecta input de ataque durante o lock
+
 	if player and Input.is_action_just_pressed("attack") and lock_timer and lock_timer.time_left > 0:
 		if not queued_next_attack and current_combo_index < combo_sequence.size() - 1:
 			queued_next_attack = true
-			print("[Attack] Próximo ataque encadeado preparado (combo step %d → %d)" %
+			print("[Attack] Next chained attack prepared (combo step %d → %d)" %
 				[current_combo_index + 1, current_combo_index + 2])
-
 
 func _on_finished(_anim_name: String) -> void:
 	if lock_timer and lock_timer.time_left > 0:
 		lock_timer.stop()
 	_on_attack_finished()
-
 
 func _on_attack_finished() -> void:
 	if not player:
@@ -89,13 +81,13 @@ func _on_attack_finished() -> void:
 	player.is_transitioning = false
 
 	if queued_next_attack and current_combo_index < combo_sequence.size() - 1:
-		# 🔁 Encadeia o próximo ataque
+
 		current_combo_index += 1
-		print("[Attack] Encadeando para combo #%d" % (current_combo_index + 1))
-		_enter({})  # Recomeça o estado com o próximo ataque
+		print("[Attack] chaining to combo #%d" % (current_combo_index + 1))
+		_enter({})  
 		return
 	else:
-		# 🧩 Retorna pro estado correto (Idle / Jump)
+
 		current_combo_index = 0
 		if not player.is_on_floor():
 			player.current_state = player.State.JUMP
@@ -106,11 +98,9 @@ func _on_attack_finished() -> void:
 
 	_end_state()
 
-
 func _exit() -> void:
 	if lock_timer and lock_timer.is_inside_tree():
 		lock_timer.queue_free()
-
 
 func _end_state() -> void:
 	if has_method("dispatch"):

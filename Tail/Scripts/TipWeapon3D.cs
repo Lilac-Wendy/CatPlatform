@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using Godot;
-// ReSharper disable CheckNamespace
 namespace CatPlatform.Tail.Scripts;
 
 public partial class TipWeapon3D : Area3D
@@ -56,7 +55,7 @@ public partial class TipWeapon3D : Area3D
             rb.ApplyImpulse(dir * KnockbackForce);
         }
 
-        // Efeitos visuais/sonoros...
+        // VFX/SFX?
         AddTargetToCooldown(target);
     }
 

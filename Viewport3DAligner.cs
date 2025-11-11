@@ -20,12 +20,11 @@ public partial class Viewport3DAligner : SubViewport
 
     private void UpdateViewportParams()
     {
-        // Conversão para Vector2I
+
         this.Size = new Vector2I((int)TargetResolution.X, (int)TargetResolution.Y);
         this.TransparentBg = true;
         this.Disable3D = false;
 
-        // Atribuição segura (Always = 2)
         this.Set("update_mode", 2);
 
         if (AutoAdjustAspect && TargetCamera != null)

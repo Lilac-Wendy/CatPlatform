@@ -6,7 +6,7 @@ extends LimboState
 func _enter(_msg := {}) -> void:
 	var player = get_parent().get_parent()
 	if not player:
-		push_warning("MovingState: player não encontrado")
+		push_warning("MovingState: player not found")
 		return
 
 	var anim_name = walk_east if player.last_facing_direction_x > 0 else walk_west
@@ -17,6 +17,5 @@ func _enter(_msg := {}) -> void:
 		animation_player.play(anim_name)
 		player._play_hsm("move")
 
-	# 🔹 toca a cauda idle junto
 	if player.has_method("play_tail"):
 		player.play_tail("IDLE")

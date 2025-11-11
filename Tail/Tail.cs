@@ -14,10 +14,9 @@ namespace CatPlatform.Tail
         public float TailLength { get; set; } = 120f;
 
         [ExportCategory("=== ELASTICITY & STIFFNESS ===")]
-        // SegmentSpacingFactor foi removido.
-        
-        [Export(PropertyHint.Range, "1,50,1")] // Range aumentado
-        public int ConstraintIterations { get; set; } = 10; // Default aumentado
+
+        [Export(PropertyHint.Range, "1,50,1")] 
+        public int ConstraintIterations { get; set; } = 10; 
 
         [Export(PropertyHint.Range, "0.1,5.0,0.1")]
         public float ConstraintStrength { get; set; } = 1.0f;
@@ -30,12 +29,11 @@ namespace CatPlatform.Tail
         public float VerletDamping { get; set; } = 0.012f;
 
         [Export(PropertyHint.Range, "0.0,2.0,0.01")]
-        public float InertiaFactor { get; set; } = 1.0f; // Agora você pode usar 1.0f
+        public float InertiaFactor { get; set; } = 1.0f; 
 
         [ExportCategory("=== FOLLOWING & LAG ===")]
-        // BaseLagStrength e LagFalloff foram removidos.
-        
-        [Export(PropertyHint.Range, "0.0,200.0,1.0")] // Range de 0 permite desligar
+
+        [Export(PropertyHint.Range, "0.0,200.0,1.0")] 
         public float TailFollowSpeed { get; set; } = 50f;
 
         [ExportCategory("=== ADVANCED CONTROL ===")]
@@ -65,7 +63,6 @@ namespace CatPlatform.Tail
         [Export]
         public SubViewport TargetViewport { get; set; }
 
-        // Variáveis privadas
         private List<Vector2> positions = new();
         private List<Vector2> prevPositions = new();
         private List<bool> locked = new();
@@ -109,10 +106,7 @@ namespace CatPlatform.Tail
             Vector2 end = TailEnd3D != null ? ProjectTo2D(TailEnd3D.GlobalPosition) : GlobalPosition + Vector2.Right * TailLength;
 
             Vector2 dir = (end - start).Normalized();
-            
-            // --- CORREÇÃO "CORDA" ---
-            // O SegmentSpacingFactor foi removido daqui para garantir que o comprimento
-            // de descanso da corda seja exatamente o TailLength.
+
             float segLen = TailLength / (SegmentCount - 1);
 
             for (int i = 0; i < SegmentCount; i++)
@@ -121,7 +115,7 @@ namespace CatPlatform.Tail
                 positions.Add(p);
                 prevPositions.Add(p);
                 segmentLengths.Add(segLen);
-                
+
                 if (ControlByTip)
                     locked.Add(i == SegmentCount - 1); 
                 else
@@ -131,13 +125,13 @@ namespace CatPlatform.Tail
 
         private void ApplyPreset(TailPreset preset)
         {
-            // Atualizando presets para a nova lógica (sem SpacingFactor, LagStrength, etc.)
+
             switch (preset)
             {
                 case TailPreset.RealisticCat:
                     SegmentCount = 15;
                     TailLength = 120f;
-                    ConstraintIterations = 8; // Aumentado
+                    ConstraintIterations = 8; 
                     ConstraintStrength = 1.0f;
                     VerletGravity = 180f;
                     VerletDamping = 0.012f;
@@ -150,7 +144,7 @@ namespace CatPlatform.Tail
                 case TailPreset.FloppyFlexible:
                     SegmentCount = 25;
                     TailLength = 150f;
-                    ConstraintIterations = 4; // Baixo para ser molenga
+                    ConstraintIterations = 4; 
                     ConstraintStrength = 0.7f;
                     VerletGravity = 120f;
                     VerletDamping = 0.005f;
@@ -163,7 +157,7 @@ namespace CatPlatform.Tail
                 case TailPreset.StiffControlled:
                     SegmentCount = 8;
                     TailLength = 100f;
-                    ConstraintIterations = 15; // Alto para ser rígido
+                    ConstraintIterations = 15; 
                     ConstraintStrength = 1.5f;
                     VerletGravity = 250f;
                     VerletDamping = 0.02f;
@@ -172,8 +166,7 @@ namespace CatPlatform.Tail
                     CurveSmoothness = 0.1f;
                     ExternalForceResistance = 10.0f;
                     break;
-                    
-                // (Outros presets podem ser ajustados de forma similar)
+
             }
 
             if (_isReady)
@@ -185,7 +178,6 @@ namespace CatPlatform.Tail
             if (!_isReady) return;
             float dt = (float)delta;
 
-            // Trava a base (âncora da corda)
             if (!ControlByTip && TailStart3D != null && MainCamera != null && TargetViewport != null)
             {
                 Vector2 base2D = ProjectTo2D(TailStart3D.GlobalPosition);
@@ -193,17 +185,13 @@ namespace CatPlatform.Tail
                 prevPositions[0] = base2D;
             }
 
-            // Simula a física (inércia e gravidade)
             StepVerlet(dt);
-            
-            // Guia a ponta (opcional) e trava a ponta (se ControlByTip)
+
             ApplyTipControl(dt);
 
-            // Suaviza as curvas
             if (CurveSmoothness > 0.01f)
                 ApplyCurveSmoothing();
 
-            // Desenha a linha
             UpdateLine();
         }
 
@@ -219,19 +207,17 @@ namespace CatPlatform.Tail
                 Vector2 pos = positions[i];
                 Vector2 prev = prevPositions[i];
                 Vector2 velocity = (pos - prev) * (1f - VerletDamping) * InertiaFactor;
-                
+
                 Vector2 forces = Vector2.Down * VerletGravity;
                 if (ExternalForceResistance > 0.01f)
                     forces -= velocity * ExternalForceResistance * dt;
-                    
+
                 Vector2 next = pos + velocity + forces * dt2;
 
                 prevPositions[i] = pos;
                 positions[i] = next;
             }
 
-            // Aplica as restrições (puxa a corda para ficar firme)
-            // Isso agora acontece *depois* da física e *antes* do desenho.
             for (int iter = 0; iter < iterations; iter++)
                 SatisfyConstraints();
         }
@@ -244,7 +230,7 @@ namespace CatPlatform.Tail
                 Vector2 delta = positions[j] - positions[i];
                 float dist = delta.Length();
                 float restLength = segmentLengths[i];
-                
+
                 if (dist == 0) continue;
                 float diff = (dist - restLength) / dist * ConstraintStrength;
 
@@ -271,7 +257,6 @@ namespace CatPlatform.Tail
             }
         }
 
-        // Renomeado de ApplyFollowLag para ApplyTipControl para ser mais claro
         private void ApplyTipControl(float delta)
         {
             if (MainCamera == null || TargetViewport == null)
@@ -279,16 +264,14 @@ namespace CatPlatform.Tail
 
             if (ControlByTip && TailEnd3D != null)
             {
-                // Modo: Controlar pela ponta. Trava a ponta.
+
                 Vector2 end2D = ProjectTo2D(TailEnd3D.GlobalPosition);
                 positions[^1] = end2D;
-                prevPositions[^1] = end2D; // Trava rígida da ponta
+                prevPositions[^1] = end2D; 
             }
             else if (!ControlByTip && TailEnd3D != null && TailFollowSpeed > 0.01f)
             {
-                // Modo: Controlar pela base (padrão). 
-                // A base JÁ FOI TRAVADA no _PhysicsProcess.
-                // Aqui, a ponta "tenta" seguir o TailEnd3D suavemente.
+
                 Vector2 end2D = ProjectTo2D(TailEnd3D.GlobalPosition);
                 positions[^1] = positions[^1].Lerp(end2D, TailFollowSpeed * delta);
             }
@@ -311,7 +294,6 @@ namespace CatPlatform.Tail
             return new Vector2(norm.X * viewportSize.X, norm.Y * viewportSize.Y);
         }
 
-        // Métodos públicos
         public void SetTipPosition(Vector2 position, float influence = 1.0f)
         {
             if (positions.Count > 0)

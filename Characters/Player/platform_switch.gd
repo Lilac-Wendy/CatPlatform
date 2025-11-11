@@ -28,13 +28,13 @@ func _enter(msg: Dictionary = {}) -> void:
 		animation_player.seek(0, true)
 		animation_player.play(anim_name)
 		player_ref.current_platform = target_platform
-		# Atualiza Z
+
 		match target_platform:
 			Platform.A: player_ref.current_platform_z = player_ref.Z_FOREGROUND
 			Platform.B: player_ref.current_platform_z = player_ref.Z_MIDDLEGROUND
 			Platform.C: player_ref.current_platform_z = player_ref.Z_BACKGROUND
 	else:
-		push_warning("PlatformSwitch: animação '%s' não encontrada" % anim_name)
+		push_warning("PlatformSwitch: animation '%s' not found" % anim_name)
 		_end_state()
 
 func _on_finished(anim_name: String) -> void:

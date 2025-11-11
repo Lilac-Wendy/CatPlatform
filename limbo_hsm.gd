@@ -6,8 +6,6 @@ extends LimboHSM
 @onready var attack_state: LimboState = $Attack
 @onready var platform_state: LimboState = $PlatformSwitch
 
-# 🧠 Define prioridades dos estados
-# Quanto maior o número, maior a prioridade
 var state_priority := {
 	"idle": 1,
 	"move": 2,
@@ -40,8 +38,6 @@ func _ready() -> void:
 	set_active(true)
 	print("[HSM] Ready and active.")
 
-
-# 🔹 Sobrescreve o dispatch pra respeitar prioridade
 func trigger_event(event_name: String, cargo: Dictionary = {}) -> void:
 	if event_name == "":
 		return
@@ -49,15 +45,12 @@ func trigger_event(event_name: String, cargo: Dictionary = {}) -> void:
 	var event_priority = state_priority.get(event_name, 0)
 
 	if event_priority < current_priority:
-		print("[HSM] Ignorando evento '%s' (prioridade menor: %d < %d)" %
+		print("[HSM] Ignoring event '%s' (lower priority: %d < %d)" %
 			[event_name, event_priority, current_priority])
 		return
 
 	current_priority = event_priority
 	dispatch(event_name, cargo)
-
-
-# 🔹 Reseta prioridade quando o estado termina
 func on_state_finished(state_name: String) -> void:
 	current_priority = 0
-	print("[HSM] Estado '%s' finalizado — prioridade resetada." % state_name)
+	print("[HSM] State '%s' finished — priority reset." % state_name)
