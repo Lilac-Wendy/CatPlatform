@@ -1,0 +1,80 @@
+[gd_resource type="AnimationNodeStateMachine" load_steps=16 format=3 uid="uid://eiwl722gxfh2"]
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_dw050"]
+animation = &"IDLE_WEST"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_b26j0"]
+animation = &"IDLE_EAST"
+
+[sub_resource type="AnimationNodeBlendSpace1D" id="AnimationNodeBlendSpace1D_n7ghd"]
+resource_name = "Idle"
+blend_point_0/node = SubResource("AnimationNodeAnimation_dw050")
+blend_point_0/pos = -1.0
+blend_point_1/node = SubResource("AnimationNodeAnimation_b26j0")
+blend_point_1/pos = 1.0
+blend_mode = 1
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_sweqy"]
+animation = &"WALK_WEST"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_2hs0m"]
+animation = &"WALK_EAST"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_1jxqw"]
+animation = &"WALK_NORTH"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_n7ghd"]
+animation = &"WALK_SOUTH"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_nvl01"]
+animation = &"WALK_SOUTHWEST"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_ivps1"]
+animation = &"WALK_SOUTHEAST"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_urp6f"]
+animation = &"WALK_NORTHEAST"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_bwjto"]
+animation = &"WALK_NORTHWEST"
+
+[sub_resource type="AnimationNodeBlendSpace2D" id="AnimationNodeBlendSpace2D_1jxqw"]
+resource_name = "Walk"
+blend_point_0/node = SubResource("AnimationNodeAnimation_sweqy")
+blend_point_0/pos = Vector2(-1, 0)
+blend_point_1/node = SubResource("AnimationNodeAnimation_2hs0m")
+blend_point_1/pos = Vector2(1, 0)
+blend_point_2/node = SubResource("AnimationNodeAnimation_1jxqw")
+blend_point_2/pos = Vector2(0, 1)
+blend_point_3/node = SubResource("AnimationNodeAnimation_n7ghd")
+blend_point_3/pos = Vector2(0, -1)
+blend_point_4/node = SubResource("AnimationNodeAnimation_nvl01")
+blend_point_4/pos = Vector2(-1, -1)
+blend_point_5/node = SubResource("AnimationNodeAnimation_ivps1")
+blend_point_5/pos = Vector2(1, -1)
+blend_point_6/node = SubResource("AnimationNodeAnimation_urp6f")
+blend_point_6/pos = Vector2(1, 1)
+blend_point_7/node = SubResource("AnimationNodeAnimation_bwjto")
+blend_point_7/pos = Vector2(-1, 1)
+min_space = Vector2(-1, -1.01)
+blend_mode = 1
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_sweqy"]
+advance_mode = 2
+advance_expression = "!velocity"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_2hs0m"]
+advance_mode = 2
+advance_expression = "velocity"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_1jxqw"]
+advance_mode = 2
+
+[resource]
+resource_local_to_scene = true
+states/Idle/node = SubResource("AnimationNodeBlendSpace1D_n7ghd")
+states/Idle/position = Vector2(347, 145)
+states/Start/position = Vector2(196, 145)
+states/Walk/node = SubResource("AnimationNodeBlendSpace2D_1jxqw")
+states/Walk/position = Vector2(526, 145)
+transitions = ["Walk", "Idle", SubResource("AnimationNodeStateMachineTransition_sweqy"), "Idle", "Walk", SubResource("AnimationNodeStateMachineTransition_2hs0m"), "Start", "Idle", SubResource("AnimationNodeStateMachineTransition_1jxqw")]

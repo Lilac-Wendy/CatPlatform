@@ -1,0 +1,51 @@
+[gd_scene load_steps=9 format=3 uid="uid://bkb8gq8no158r"]
+
+[ext_resource type="Texture2D" uid="uid://cmo7jfkwa7j2u" path="res://grass.png" id="1_uyhia"]
+[ext_resource type="Texture2D" uid="uid://d2ux4p8tcgaam" path="res://PrototypeKenneyMaterials-main/green/pixelated-grass-tile-stockcake.jpg" id="2_nnbpp"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_op6mg"]
+albedo_texture = ExtResource("1_uyhia")
+uv1_scale = Vector3(2, 1.5, 2)
+uv1_triplanar = true
+uv1_triplanar_sharpness = 1.8025011
+
+[sub_resource type="BoxMesh" id="BoxMesh_gm7yr"]
+lightmap_size_hint = Vector2i(14, 21)
+material = SubResource("StandardMaterial3D_op6mg")
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_wwanb"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_mqqx8"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_08ip4"]
+albedo_texture = ExtResource("2_nnbpp")
+roughness = 0.0
+uv1_scale = Vector3(2.5, 2.5, 2.5)
+uv1_offset = Vector3(0, 0.1, 0)
+uv1_triplanar = true
+uv1_triplanar_sharpness = 1.8025011
+
+[sub_resource type="BoxMesh" id="BoxMesh_a8ns2"]
+lightmap_size_hint = Vector2i(14, 21)
+material = SubResource("StandardMaterial3D_08ip4")
+
+[node name="Basic" type="Node3D"]
+
+[node name="Stone" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_gm7yr")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Stone"]
+physics_material_override = SubResource("PhysicsMaterial_wwanb")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Stone/StaticBody3D"]
+shape = SubResource("BoxShape3D_mqqx8")
+
+[node name="Grass" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.0031793, 0, 0, 0, 1.0031793, 0, 0, 0, 1.0031793, 0, 0, 0)
+mesh = SubResource("BoxMesh_a8ns2")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Grass"]
+physics_material_override = SubResource("PhysicsMaterial_wwanb")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Grass/StaticBody3D"]
+shape = SubResource("BoxShape3D_mqqx8")

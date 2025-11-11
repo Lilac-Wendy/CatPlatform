@@ -1,0 +1,20 @@
+[gd_scene load_steps=3 format=3 uid="uid://bn8nxiyyyjlwr"]
+
+[ext_resource type="PackedScene" uid="uid://b1dp1mdhmxxyb" path="res://Tail/Tail.tscn" id="1_q5gnt"]
+[ext_resource type="Texture2D" uid="uid://bml48e8gxbtc" path="res://icon.svg" id="2_ghyao"]
+
+[node name="Test Area" type="Node2D"]
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(92, 75)
+
+[node name="Tail" parent="." instance=ExtResource("1_q5gnt")]
+position = Vector2(18, 12)
+SegmentCount = 6
+JointSoftness = 0.5
+AntiGravityForce = 50.0
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(61, 61)
+scale = Vector2(0.24882334, 0.34520814)
+texture = ExtResource("2_ghyao")

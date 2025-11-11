@@ -1,0 +1,79 @@
+[gd_scene load_steps=9 format=3 uid="uid://b76hktigreapb"]
+
+[ext_resource type="PackedScene" uid="uid://cvsfkwlu4okae" path="res://platform.tscn" id="1_fj7yv"]
+[ext_resource type="PackedScene" uid="uid://biswlo8wva43r" path="res://Characters/Player/player.tscn" id="2_tlwt5"]
+
+[sub_resource type="Environment" id="Environment_fj7yv"]
+background_mode = 1
+background_color = Color(0.663666, 0.48687375, 0.36894885, 0.11764706)
+
+[sub_resource type="CameraAttributesPractical" id="CameraAttributesPractical_tlwt5"]
+
+[sub_resource type="Compositor" id="Compositor_aqk2v"]
+
+[sub_resource type="Environment" id="Environment_tlwt5"]
+
+[sub_resource type="CameraAttributesPractical" id="CameraAttributesPractical_aqk2v"]
+
+[sub_resource type="Compositor" id="Compositor_036b0"]
+
+[node name="World" type="Node3D"]
+process_mode = 1
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_fj7yv")
+camera_attributes = SubResource("CameraAttributesPractical_tlwt5")
+compositor = SubResource("Compositor_aqk2v")
+
+[node name="SubViewportContainer" type="SubViewportContainer" parent="."]
+texture_filter = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+stretch = true
+
+[node name="SubViewport" type="SubViewport" parent="SubViewportContainer"]
+handle_input_locally = false
+use_hdr_2d = true
+size = Vector2i(1280, 720)
+render_target_update_mode = 4
+
+[node name="Foreground" parent="SubViewportContainer/SubViewport" instance=ExtResource("1_fj7yv")]
+transform = Transform3D(1, 0, 0, 0, 0.99999994, 0, 0, 0, 1, 0, -1, 10)
+
+[node name="Middleground" parent="SubViewportContainer/SubViewport" instance=ExtResource("1_fj7yv")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
+
+[node name="Background" parent="SubViewportContainer/SubViewport" instance=ExtResource("1_fj7yv")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, -10)
+
+[node name="player" parent="SubViewportContainer/SubViewport" instance=ExtResource("2_tlwt5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.004744351, 3.3000002, 0)
+disable_mode = 1
+axis_lock_linear_z = true
+
+[node name="SpringArm3D" type="SpringArm3D" parent="SubViewportContainer/SubViewport/player"]
+transform = Transform3D(1, 0, 0, 0, 0.9961947, 0.08715574, 0, -0.08715574, 0.9961947, 0.2, 0.2, 0)
+collision_mask = 0
+spring_length = 6.0
+
+[node name="PlayerCamera" type="Camera3D" parent="SubViewportContainer/SubViewport/player/SpringArm3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.0531597, 0.08476567, 10.485429)
+keep_aspect = 0
+environment = SubResource("Environment_tlwt5")
+attributes = SubResource("CameraAttributesPractical_aqk2v")
+compositor = SubResource("Compositor_036b0")
+current = true
+fov = 60.0
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="SubViewportContainer/SubViewport"]
+transform = Transform3D(-0.2591114, 0.79271567, -0.55178183, -0.83753437, 0.10011881, 0.53713346, 0.48103786, 0.60131365, 0.63798475, 0, 10.840284, 7.57631)
+light_color = Color(1.1976054, 0.9945455, 0.8564048, 1)
+light_energy = 2.0
+light_indirect_energy = 2.371
+light_specular = 3.0
+shadow_enabled = true
+
+[node name="Voidground" type="Node3D" parent="SubViewportContainer/SubViewport"]

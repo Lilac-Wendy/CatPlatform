@@ -1,0 +1,12 @@
+[gd_resource type="AnimationNodeBlendTree" load_steps=3 format=3 uid="uid://tdidb36sm3x1"]
+
+[ext_resource type="AnimationNodeStateMachine" uid="uid://hlpwr6a1dv7p" path="res://Animations/player_run_blend.tres" id="1_von21"]
+[ext_resource type="AnimationNodeStateMachine" uid="uid://dxvx4xub1qntg" path="res://Animations/tail_movements.tres" id="2_nxxk1"]
+
+[resource]
+graph_offset = Vector2(-141.72528, 21.032692)
+nodes/PlayerMovementState/node = ExtResource("1_von21")
+nodes/PlayerMovementState/position = Vector2(0, 100)
+"nodes/Tail State Machine/node" = ExtResource("2_nxxk1")
+"nodes/Tail State Machine/position" = Vector2(680, 80)
+node_connections = [&"output", 0, &"PlayerMovementState"]

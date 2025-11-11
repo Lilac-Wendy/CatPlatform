@@ -1,0 +1,48 @@
+[gd_scene load_steps=7 format=3 uid="uid://b1dp1mdhmxxyb"]
+
+[ext_resource type="PackedScene" uid="uid://dh51i1q4l8ghn" path="res://Tail/tail_segment.tscn" id="1_1dgmm"]
+[ext_resource type="Script" uid="uid://da6swe4yy5rw2" path="res://Tail/Tail.cs" id="1_ns3r3"]
+[ext_resource type="Script" uid="uid://e37nqvamogwh" path="res://Tail/CameraSync3DTo2D.cs" id="4_cq53i"]
+
+[sub_resource type="Gradient" id="Gradient_vniof"]
+
+[sub_resource type="Gradient" id="Gradient_cq53i"]
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_iy537"]
+gradient = SubResource("Gradient_cq53i")
+width = 128
+fill_from = Vector2(0.6125, 1)
+fill_to = Vector2(0.5625, 0)
+
+[node name="Tail" type="Node2D"]
+process_mode = 3
+script = ExtResource("1_ns3r3")
+metadata/_edit_horizontal_guides_ = [453.0]
+
+[node name="Line2D" type="Line2D" parent="."]
+position = Vector2(0, 144)
+points = PackedVector2Array(0, 0, -3.2225697, 15.027575, -6.721022, 29.981302, -10.525976, 44.846, -14.65722, 59.608658, -19.12511, 74.25824, -23.933552, 88.78524, -29.086077, 103.179886, -34.591427, 117.42998, -40.46547, 131.51933, -46.729626, 145.42744, -53.407604, 159.13011, -60.521038, 172.60085, -68.05606, 185.82999, -75.87567, 198.8831, -83.67824, 211.93732, -91.1004, 225.20325, -97.896255, 238.79335, -104.084724, 252.66364, -110.0889, 266.60742)
+gradient = SubResource("Gradient_vniof")
+texture_mode = 1
+joint_mode = 2
+begin_cap_mode = 1
+end_cap_mode = 2
+
+[node name="TailEnd" parent="." instance=ExtResource("1_1dgmm")]
+position = Vector2(0, -9.51031)
+freeze = true
+
+[node name="TailStart" parent="." instance=ExtResource("1_1dgmm")]
+lock_rotation = true
+freeze = true
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(959, 407)
+scale = Vector2(2, 2)
+script = ExtResource("4_cq53i")
+
+[node name="Sprite2D" type="Sprite2D" parent="Camera2D"]
+visible = false
+position = Vector2(-40, 157.5)
+scale = Vector2(0.5, 0.5)
+texture = SubResource("GradientTexture2D_iy537")

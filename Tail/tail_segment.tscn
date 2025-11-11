@@ -1,0 +1,26 @@
+[gd_scene load_steps=3 format=3 uid="uid://dh51i1q4l8ghn"]
+
+[ext_resource type="Script" uid="uid://bf0ml816t3vj0" path="res://Tail/TailSegment.cs" id="1_55s4h"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_55s4h"]
+radius = 1.0
+height = 2.0
+
+[node name="TailSegment" type="RigidBody2D"]
+collision_mask = 9
+mass = 0.8
+gravity_scale = 0.3
+center_of_mass_mode = 1
+center_of_mass = Vector2(10, 0)
+sleeping = true
+continuous_cd = 1
+linear_damp = 4.0
+angular_damp = 4.0
+script = ExtResource("1_55s4h")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+scale = Vector2(6, 1.5)
+shape = SubResource("CapsuleShape2D_55s4h")
+
+[node name="DampedSpringJoint2D" type="DampedSpringJoint2D" parent="."]
+bias = 0.1
