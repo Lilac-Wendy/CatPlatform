@@ -19,3 +19,18 @@ func _enter(_msg := {}) -> void:
 
 	if player.has_method("play_tail"):
 		player.play_tail("IDLE")
+
+func _end_state() -> void:
+	print("[Estado] Terminando e notificando HSM")
+	
+	# Notifica a HSM que este estado terminou
+	var hsm = get_parent()
+	if hsm and hsm.has_method("on_state_finished"):
+		hsm.on_state_finished(name)  # "name" é o nome do nó do estado
+	
+	if has_method("dispatch"):
+		dispatch("finished")
+	else:
+		emit_signal("event", "finished")
+		
+		

@@ -7,21 +7,7 @@ extends CharacterBody3D
 @export var jump_force: float = 4.5
 @export var gravity: float = 10.0
 @export var move_threshold: float = 0.1
-
-# Novos parâmetros
-@export var jump_buffer_time: float = 0.15
-@export var coyote_time: float = 0.1
-@export var air_control: float = 0.6
-
-# ==========================
-# === ATRIBUTOS DO PLAYER
-# ==========================
-@export var attack_speed: float = 1.0
-@export var allow_gravity_during_attack := true
-@export_enum("normal", "float", "stall", "suspend") var air_attack_mode: String = "stall"
-@export var air_attack_gravity_scale := 0.4
-@export var stall_duration_base := 0.35
-@export var stall_horizontal_damp := 0.2
+@export var attack_speed: float = 1.0 
 
 # ==========================
 # === REFERÊNCIAS DE NÓS
@@ -32,10 +18,14 @@ extends CharacterBody3D
 @onready var tail_container: Node3D = $TailContainer
 @onready var tail_animation_player: AnimationPlayer = $TailPlayer
 
+# === TIMERS DO COMBO (Referenciados) ===
+@onready var AttackComboTimer: Timer = $AttackComboTimer
+@onready var AttackCooldownTimer: Timer = $AttackCooldownTimer 
+
 # ==========================
 # === ESTADOS / PLATAFORMAS
 # ==========================
-enum State { IDLE, WALK, JUMP, FALL, Z_TRANSITION, ATTACK }
+enum State { IDLE, WALK, JUMP, FALL, ATTACK }
 var current_state: State = State.IDLE
 
 enum Platform { A, B, C }
@@ -47,149 +37,130 @@ const Z_BACKGROUND = PLATFORM_DISTANCE
 var current_platform: Platform = Platform.B
 var current_platform_z: float = Z_MIDDLEGROUND
 
-# ==========================
-# === VARIÁVEIS INTERNAS
-# ==========================
 var is_transitioning := false
-var was_in_air := false
-var last_input_dir := Vector2.ZERO
 var last_facing_direction_x := 1.0
-var stall_timer: Timer = null
-var stall_active := false
+var current_combo_index := 0
 
-# Novas variáveis para pulo e queda
-var jump_buffer_timer: float = 0.0
-var coyote_timer: float = 0.0
-var just_jumped := false
-
-# ==========================
-# === READY
-# ==========================
 func _ready() -> void:
 	global_position.z = Z_MIDDLEGROUND
 	current_platform_z = Z_MIDDLEGROUND
 	platform_animation_player.animation_finished.connect(_on_platform_animation_finished)
+	
+	_setup_timers()
 
-# ==========================
-# === INPUT
-# ==========================
-func _input(event: InputEvent) -> void:
-	if Input.is_action_just_pressed("ui_accept"):
-		jump_buffer_timer = jump_buffer_time
+func _setup_timers() -> void:
+	if AttackComboTimer:
+		AttackComboTimer.one_shot = true
+		if not AttackComboTimer.is_connected("timeout", Callable(self, "_on_combo_timeout")):
+			AttackComboTimer.timeout.connect(_on_combo_timeout)
+	
+	if AttackCooldownTimer:
+		AttackCooldownTimer.one_shot = true
+
+func _on_combo_timeout() -> void:
+	# Reseta o combo quando o timer longo expira
+	if current_combo_index > 0:
+		print("[Player] Combo timeout - resetando índice %d para 0." % (current_combo_index + 1))
+		current_combo_index = 0
 
 # ==========================
 # === PHYSICS PROCESS
 # ==========================
 func _physics_process(delta: float) -> void:
 	var on_floor := is_on_floor()
-	var in_attack := current_state == State.ATTACK
-
-	# Atualização de timers
-	if jump_buffer_timer > 0:
-		jump_buffer_timer -= delta
-	if coyote_timer > 0:
-		coyote_timer -= delta
-
-	# Detectar se acabou de cair ou pousar
-	var just_landed := was_in_air and on_floor
-	was_in_air = not on_floor
-	if on_floor:
-		coyote_timer = coyote_time
-
-	# =====================
-	# === MOVIMENTO HORIZONTAL
-	# =====================
+	
+	# === INPUT E MOVIMENTO (Mantido) ===
 	var input_dir: Vector2 = Input.get_vector("left", "right", "up", "down")
 	var is_moving: bool = input_dir.length() > move_threshold
+	
 	handle_tail_flip(input_dir, is_moving)
 	update_facing(input_dir)
+	
+	var target_speed := input_dir.x * move_speed
+	if not on_floor:
+		velocity.x = lerp(velocity.x, target_speed, 0.1)
+	else:
+		velocity.x = target_speed
 
-	if not is_transitioning:
-		if current_state != State.ATTACK:
-			var target_speed := input_dir.x * move_speed
-			if not on_floor:
-				# controle aéreo limitado
-				velocity.x = lerp(velocity.x, target_speed, air_control)
-			else:
-				velocity.x = target_speed
-
-			if is_moving and on_floor:
-				if current_state != State.WALK:
-					current_state = State.WALK
-					_play_hsm("move")
-			elif on_floor:
-				if current_state != State.IDLE:
-					current_state = State.IDLE
-					_play_hsm("idle")
-		else:
-			# Em ataque, reduzir controle
-			if not on_floor:
-				velocity.x = move_toward(velocity.x, 0, move_speed * 0.2)
-			else:
-				velocity.x = 0
-
-	# =====================
-	# === GRAVIDADE E PULO
-	# =====================
+	# === GRAVIDADE (Mantido) ===
 	if not on_floor:
 		velocity.y -= gravity * delta
 	else:
 		velocity.y = max(velocity.y, 0)
 
-	# Jump buffer + coyote time
-	if jump_buffer_timer > 0 and coyote_timer > 0 and not is_transitioning and current_state != State.ATTACK:
-		velocity.y = jump_force
-		current_state = State.JUMP
-		_play_hsm("jump")
-		jump_buffer_timer = 0.0
-		coyote_timer = 0.0
-		was_in_air = true
-		just_jumped = true
+	# === CONTROLE DE ESTADO PRINCIPAL (Mantido) ===
+	if not is_transitioning:
+		match current_state:
+			State.IDLE, State.WALK:
+				if Input.is_action_just_pressed("ui_accept") and on_floor:
+					_jump()
+				elif Input.is_action_just_pressed("attack"):
+					_attack()
+				elif is_moving and on_floor:
+					if current_state != State.WALK:
+						current_state = State.WALK
+						_play_hsm("move")
+				elif not is_moving and on_floor:
+					if current_state != State.IDLE:
+						current_state = State.IDLE
+						_play_hsm("idle")
+				elif not on_floor:
+					current_state = State.JUMP if velocity.y > 0 else State.FALL
+					_play_hsm("jump" if velocity.y > 0 else "fall")
+					
+			State.JUMP, State.FALL:
+				if Input.is_action_just_pressed("attack"):
+					_attack()
+				elif on_floor:
+					current_state = State.WALK if is_moving else State.IDLE
+					_play_hsm("move" if is_moving else "idle")
+					
+			State.ATTACK:
+				if Input.is_action_just_pressed("ui_accept") and on_floor:
+					_jump()
 
-	# =====================
-	# === MOVIMENTO FINAL
-	# =====================
+	if Input.is_action_just_pressed("up") and not is_transitioning and current_state != State.ATTACK:
+		_play_hsm("platform_switch_up")
+	elif Input.is_action_just_pressed("down") and not is_transitioning and current_state != State.ATTACK:
+		_play_hsm("platform_switch_down")
+
 	velocity.z = 0
 	move_and_slide()
 
-	# =====================
-	# === TRANSIÇÕES DE ESTADO
-	# =====================
-	if not on_floor and velocity.y < 0 and current_state != State.FALL and not in_attack:
-		current_state = State.FALL
-		_play_hsm("fall")
+func _jump() -> void:
+	velocity.y = jump_force
+	current_state = State.JUMP
+	_play_hsm("jump")
 
-	if just_landed and not is_transitioning and current_state != State.ATTACK:
-		current_state = State.IDLE
-		_play_hsm("idle")
+func _attack() -> void:
 
-	# =====================
-	# === ATAQUE
-	# =====================
-	if Input.is_action_just_pressed("attack") and not is_transitioning:
-		current_state = State.ATTACK
-		if not on_floor:
-			if velocity.y > 0.0:
-				velocity.y *= 0.3
-				velocity.x *= 0.1
-		_play_hsm("attack")
+	var is_combo_active = not AttackComboTimer.is_stopped() if AttackComboTimer else false
+	
+	var time_left = AttackComboTimer.time_left if AttackComboTimer else 0.0
+	
+	print("[Player] --- Attack Input Received ---")
+	print("[Player] Combo Index before logic: %d. ComboTimer Active: %s (Time Left: %.2f)" % [current_combo_index, is_combo_active, time_left])
 
-	# =====================
-	# === TROCA DE PLATAFORMA
-	# =====================
-	if Input.is_action_just_pressed("ui_up") and not is_transitioning:
-		_play_hsm("platform_switch_up")
-	elif Input.is_action_just_pressed("ui_down") and not is_transitioning:
-		_play_hsm("platform_switch_down")
+	if current_state == State.ATTACK and is_transitioning:
+		print("[Player] LOGIC: ELIF - Currently in ATTACK state and transitioning. Input deferred to AttackState's _process.")
+		return 
+		
+	if is_combo_active:
 
-# ==========================
-# === CALLBACKS / AUXILIARES
-# ==========================
-func _on_stall_end() -> void:
-	stall_active = false
-	if stall_timer:
-		stall_timer.queue_free()
-		stall_timer = null
+		current_combo_index += 1
+		print("[Player] LOGIC: IF - Combo window is active. Index incremented to %d." % current_combo_index)
+
+		if current_combo_index >= 2: 
+			current_combo_index = 0
+			print("[Player] LOGIC: SUB-LOGIC - Combo finished cycle. Resetting index to 0.")
+			
+	else:
+		current_combo_index = 0
+		print("[Player] LOGIC: ELSE - Timer inactive or first attack. Starting combo from 0.")
+		
+	current_state = State.ATTACK
+	_play_hsm("attack", {"combo_start_index": current_combo_index})
+
 
 func play_tail(anim_name: String, event_name: String = "") -> void:
 	if tail_animation_player and tail_animation_player.has_animation(anim_name):
@@ -210,17 +181,33 @@ func handle_tail_flip(input_dir: Vector2, is_moving: bool) -> void:
 			var offset_x: float = 0.02 * new_facing
 			tail_container.position.x += offset_x
 
-func _play_hsm(event_name: String) -> void:
+func _play_hsm(event_name: String, cargo: Dictionary = {}) -> void:
 	if not anim_hsm:
 		push_warning("AnimationHSM node não encontrado")
 		return
+	
+	var final_cargo = cargo.duplicate()
+	final_cargo["player_ref"] = self
+	
+	if event_name == "platform_switch_up":
+		event_name = "platform_switch"
+		final_cargo["target"] = Platform.A
+	elif event_name == "platform_switch_down":
+		event_name = "platform_switch"
+		final_cargo["target"] = Platform.C
+	
+	print("[Player] Sending to HSM: '%s'" % event_name)
+	
 	if anim_hsm.has_method("dispatch"):
-		anim_hsm.dispatch(event_name, {"player_ref": self})
+		anim_hsm.dispatch(event_name, final_cargo)
 	elif anim_hsm.has_method("trigger_event"):
-		anim_hsm.trigger_event(event_name, {"player_ref": self})
+		anim_hsm.trigger_event(event_name, final_cargo)
 
 func _on_platform_animation_finished(anim_name: String) -> void:
 	is_transitioning = false
-	if current_state != State.ATTACK:
-		current_state = State.IDLE
-		_play_hsm("idle")
+	current_state = State.IDLE
+	_play_hsm("idle")
+
+func on_animation_state_finished() -> void:
+	is_transitioning = false
+	print("[Player] Animation state finished - can accept new inputs")

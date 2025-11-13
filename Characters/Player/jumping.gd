@@ -3,15 +3,20 @@ extends LimboState
 @export var jump_east: String = "JUMP_EAST"
 @export var jump_west: String = "JUMP_WEST"
 
+var player: Node
+var animation_finished := false
+
 func _enter(_msg := {}) -> void:
-	var player = get_parent().get_parent()
+	player = get_parent().get_parent()
 	if not player:
 		push_warning("Jumping: player not found")
-		_end_state()
 		return
 
-	if not animation_player.is_connected("animation_finished", Callable(self, "_on_finished")):
-		animation_player.animation_finished.connect(_on_finished, CONNECT_ONE_SHOT)
+	animation_finished = false
+	
+	# Conecta o sinal UMA vez
+	if not animation_player.animation_finished.is_connected(_on_finished):
+		animation_player.animation_finished.connect(_on_finished)
 
 	var anim_name = jump_east if player.last_facing_direction_x > 0 else jump_west
 
@@ -26,21 +31,36 @@ func _enter(_msg := {}) -> void:
 		push_warning("Jumping: animation '%s' not found" % anim_name)
 		_end_state()
 
-func _on_finished(anim_name: String) -> void:
-	var player = get_parent().get_parent()
-	if not player:
+func _process(_delta: float) -> void:
+	if not player or animation_finished:
+		return
+	
+	# VERIFICA SE JÁ POUSOU - isso é mais importante que a animação terminar
+	if player.is_on_floor():
+		print("[Jumping] Player landed - finishing state")
 		_end_state()
-		return
 
-	if player.current_state == player.State.ATTACK:
-		print("[Jumping] Ignoring finished — attack in progress.")
-		return
-
-	print("[Jumping] finished animation=%s" % anim_name)
-	_end_state()
+func _on_finished(anim_name: String) -> void:
+	print("[Jumping] Animation finished: %s" % anim_name)
+	animation_finished = true
+	
+	# Não finaliza imediatamente - espera o player pousar
+	# A verificação de pouso é feita no _process
 
 func _end_state() -> void:
+	
+	print("[Estado] Terminando e notificando HSM")
+	var hsm = get_parent()
+	if hsm and hsm.has_method("on_state_finished"):
+		hsm.on_state_finished(name)  # "name" é o nome do nó do estado
+
+	if animation_player.animation_finished.is_connected(_on_finished):
+		animation_player.animation_finished.disconnect(_on_finished)
+		
 	if has_method("dispatch"):
 		dispatch("finished")
 	else:
 		emit_signal("event", "finished")
+
+
+	# Notifica a HSM que este estado terminou
